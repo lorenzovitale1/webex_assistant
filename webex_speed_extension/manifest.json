@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Webex Assistant",
+  "version": "1.0",
+  "description": "Controlla la velocita di riproduzione dei video Webex e salta i silenzi automaticamente.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "all_frames": true,
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}
