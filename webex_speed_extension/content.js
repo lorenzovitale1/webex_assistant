@@ -1,7 +1,8 @@
 let config = {
     speed: 1.0,
     silenceSkip: false,
-    threshold: 2,
+    threshold: 2.0,
+    silenceDuration: 1.0,
     skipSpeed: 8.0
 };
 
@@ -11,6 +12,7 @@ let analyser = null;
 let source = null;
 let isSkipping = false;
 let monitorLoopId = null;
+let silenceStart = null;
 
 // Ascolto messaggi dal popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -89,9 +91,9 @@ function setupAudioMonitoring(video) {
         analyser.connect(audioCtx.destination);
         
         monitorAudio(video);
-        console.log("Webex Speed Controller: Silence Skipper Iniziato.");
+        console.log("Webex Assistant: Silence Skipper Iniziato.");
     } catch (e) {
-        console.error("Webex Speed Controller: Errore setup Web Audio", e);
+        console.error("Webex Assistant: Errore setup Web Audio", e);
     }
 }
 
@@ -101,6 +103,7 @@ function stopAudioMonitoring() {
         monitorLoopId = null;
     }
     isSkipping = false;
+    silenceStart = null;
 }
 
 function monitorAudio(video) {
@@ -120,10 +123,15 @@ function monitorAudio(video) {
     if (!video.paused) {
         if (volumePercent <= config.threshold) {
             if (!isSkipping) {
-                isSkipping = true;
-                setActualSpeed(video, config.skipSpeed);
+                if (!silenceStart) {
+                    silenceStart = Date.now();
+                } else if (Date.now() - silenceStart > (config.silenceDuration * 1000)) {
+                    isSkipping = true;
+                    setActualSpeed(video, config.skipSpeed);
+                }
             }
         } else {
+            silenceStart = null;
             if (isSkipping) {
                 // E' ritornata la voce
                 isSkipping = false;

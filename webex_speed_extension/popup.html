@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Webex Speed Controller Pro</title>
+    <title>Webex Assistant</title>
     <style>
         body {
             width: 320px;
@@ -126,7 +126,7 @@
     </style>
 </head>
 <body>
-    <h3>Webex Speed Controller Pro</h3>
+    <h3>Webex Assistant</h3>
     
     <div class="section">
         <div class="section-title">Velocità di Riproduzione</div>
@@ -152,10 +152,18 @@
         
         <div class="param-row">
             <span>Soglia Volume</span>
-            <span class="val" id="threshold-label">2%</span>
+            <span class="val" id="threshold-label">2.0%</span>
         </div>
         <div class="slider-container">
-            <input type="range" id="threshold-slider" min="0" max="25" step="1" value="2">
+            <input type="range" id="threshold-slider" min="0" max="10" step="0.1" value="2.0">
+        </div>
+        
+        <div class="param-row">
+            <span>Ritardo Skip</span>
+            <span class="val" id="duration-label">1.0s</span>
+        </div>
+        <div class="slider-container">
+            <input type="range" id="duration-slider" min="0" max="3" step="0.1" value="1.0">
         </div>
         
         <div class="param-row">
