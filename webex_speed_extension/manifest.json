@@ -9,7 +9,7 @@
     "storage"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "*://*.webex.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "*://*.webex.com/*"
       ],
       "all_frames": true,
       "js": [
