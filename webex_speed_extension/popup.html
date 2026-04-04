@@ -126,7 +126,20 @@
     </style>
 </head>
 <body>
-    <h3>Webex Assistant</h3>
+    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+        <img src="icons/icon48.png" alt="Webex Assistant Logo" style="width: 24px; height: 24px; margin-right: 8px; border-radius: 4px;">
+        <h3 style="margin: 0;">Webex Assistant</h3>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Login Automatico</div>
+        <div class="param-row">
+            <span>Email Webex</span>
+        </div>
+        <div class="slider-container" style="margin-top: 5px;">
+            <input type="email" id="student-email" placeholder="nome@stud.unimi.it" style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+    </div>
     
     <div class="section">
         <div class="section-title">Velocità di Riproduzione</div>
@@ -175,6 +188,10 @@
         </div>
     </div>
     
+    <a href="https://github.com/lorenzovitale1/webex_assistant/issues" target="_blank" style="display: block; width: 100%; box-sizing: border-box; text-decoration: none; background-color: #f1f1f1; color: #555; padding: 10px; border-radius: 4px; font-size: 13px; font-weight: 500; border: 1px solid #d1d1d1; transition: background-color 0.2s;">
+        🐛 Segnala un Problema/Bug
+    </a>
+
     <script src="popup.js"></script>
 </body>
 </html>

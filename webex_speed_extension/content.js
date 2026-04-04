@@ -1,4 +1,5 @@
 let config = {
+    studentEmail: "",
     speed: 1.0,
     silenceSkip: false,
     threshold: 2.0,
@@ -14,16 +15,67 @@ let isSkipping = false;
 let monitorLoopId = null;
 let silenceStart = null;
 
-// Ascolto messaggi dal popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === 'GET_STATE') {
-        sendResponse(config);
-    } else if (request.type === 'UPDATE_CONFIG') {
-        config = request.config;
-        applyConfig();
-        sendResponse({status: "ok"});
-    }
-});
+if (window.location.hostname.includes("idbroker-eu.webex.com")) {
+    handleSSOLogin();
+} else {
+    handleVideoPlayer();
+}
+
+function handleSSOLogin() {
+    chrome.storage.local.get(['config'], (result) => {
+        const studentEmail = result.config?.studentEmail;
+        if (!studentEmail) return;
+        
+        let attempts = 0;
+        const attemptLogin = setInterval(() => {
+            attempts++;
+            const emailInput = document.getElementById('IDToken1');
+            const submitBtn = document.getElementById('IDButton2');
+            if (emailInput && submitBtn) {
+                clearInterval(attemptLogin);
+                emailInput.value = studentEmail;
+                emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+                emailInput.dispatchEvent(new Event('blur', { bubbles: true }));
+                submitBtn.disabled = false;
+                
+                // La pagina potrebbe chiamare processForm se facciamo submit
+                if (typeof window.processForm === 'function') {
+                    window.processForm();
+                } else {
+                    submitBtn.click();
+                }
+            } else if (attempts > 30) {
+                clearInterval(attemptLogin);
+            }
+        }, 300);
+    });
+}
+
+function handleVideoPlayer() {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && changes.config) {
+            config = { ...config, ...changes.config.newValue };
+            applyConfig();
+        }
+    });
+
+    chrome.storage.local.get(['config'], (result) => {
+        if (result.config) {
+            config = { ...config, ...result.config };
+        }
+        
+        let attempts = 0;
+        const checkVideo = setInterval(() => {
+            attempts++;
+            if (document.querySelector('video')) {
+                clearInterval(checkVideo);
+                applyConfig();
+            } else if (attempts > 60) {
+                clearInterval(checkVideo);
+            }
+        }, 500);
+    });
+}
 
 function applyConfig() {
     const video = document.querySelector('video');
@@ -143,7 +195,4 @@ function monitorAudio(video) {
     monitorLoopId = requestAnimationFrame(() => monitorAudio(video));
 }
 
-// Initialization in caso sia presente fin dall'avvio
-setTimeout(() => {
-    applyConfig();
-}, 3000);
+// End of script

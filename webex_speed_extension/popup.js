@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // UI Elements
+    const studentEmailInput = document.getElementById('student-email');
     const speedSlider = document.getElementById('speed-slider');
     const speedLabel = document.getElementById('speed-label');
     const resetBtn = document.getElementById('reset-btn');
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Default config
     let config = {
+        studentEmail: "",
         speed: 1.0,
         silenceSkip: false,
         threshold: 2.0,
@@ -21,24 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
         skipSpeed: 8.0
     };
 
-    // Al caricamento, recupera lo stato attuale chiedendolo alla pagina attiva
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-            chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_STATE' }, (response) => {
-                if (chrome.runtime.lastError) {
-                    console.warn("Content script non ancora inizializzato su questa pagina. Ricaricare la scheda.");
-                    return;
-                }
-                if (response) {
-                    config = response;
-                    updateUI(config);
-                }
-            });
+    // Al caricamento, recupera lo stato globale dallo storage
+    chrome.storage.local.get(['config'], (result) => {
+        if (result.config) {
+            config = { ...config, ...result.config };
         }
+        updateUI(config);
     });
 
     // Funzione per aggiornare l'interfaccia utente partendo dai dati
     const updateUI = (state) => {
+        studentEmailInput.value = state.studentEmail || "";
         speedSlider.value = state.speed;
         speedLabel.textContent = parseFloat(state.speed).toFixed(2) + 'x';
 
@@ -54,9 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
         skipSpeedLabel.textContent = parseFloat(state.skipSpeed || 8).toFixed(2) + 'x';
     };
 
-    // Invia parametri tramite messaggio al content script
+    // Invia parametri e salva nello storage
     const sendConfig = () => {
         config = {
+            studentEmail: studentEmailInput.value.trim(),
             speed: parseFloat(speedSlider.value),
             silenceSkip: silenceToggle.checked,
             threshold: parseFloat(thresholdSlider.value),
@@ -66,18 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         updateUI(config);
 
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, { type: 'UPDATE_CONFIG', config: config }, (res) => {
-                    if (chrome.runtime.lastError) {
-                        console.error("Errore di com: " + chrome.runtime.lastError.message);
-                    }
-                });
-            }
-        });
+        chrome.storage.local.set({ config: config });
     };
 
     // Listeners
+    studentEmailInput.addEventListener('change', sendConfig);
     speedSlider.addEventListener('input', sendConfig);
     silenceToggle.addEventListener('change', sendConfig);
     thresholdSlider.addEventListener('input', sendConfig);
