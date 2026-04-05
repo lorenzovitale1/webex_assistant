@@ -32,7 +32,7 @@ Segui attentamente questi passaggi:
 1. Dopo aver attivato la Modalità sviluppatore, in alto a sinistra compariranno tre nuovi pulsanti.
 2. Clicca sul pulsante **Carica estensione non pacchettizzata** (oppure *Load unpacked*).
 3. Si aprirà una finestra per sfogliare i tuoi file: naviga fino alla cartella che avevi posizionato in un luogo definitivo nel *Passo 2*.
-4. **Attenzione:** non selezionare il file `.zip`, ma apri la cartella estratta fino ad arrivare alla sottocartella che contiene al suo interno un file chiamato `manifest.json`.
+4. **Attenzione:** non selezionare il file `.zip`, ma apri la cartella estratta fino ad arrivare alla sottocartella `webex_assistant_extension` (quella che contiene `manifest.json`).
 5. Fai clic su **Seleziona cartella**.
 
 ### Passo 5: Fatto! 🎉
