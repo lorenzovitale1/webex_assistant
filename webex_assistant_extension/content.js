@@ -14,6 +14,7 @@ let source = null;
 let isSkipping = false;
 let monitorLoopId = null;
 let silenceStart = null;
+let isAudioConnected = false;
 
 if (window.location.hostname.includes("idbroker-eu.webex.com")) {
     handleSSOLogin();
@@ -51,11 +52,13 @@ function handleSSOLogin() {
     });
 }
 
+let currentVideo = null;
+
 function handleVideoPlayer() {
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local' && changes.config) {
             config = { ...config, ...changes.config.newValue };
-            applyConfig();
+            if (currentVideo) applyConfig(currentVideo);
         }
     });
 
@@ -64,21 +67,37 @@ function handleVideoPlayer() {
             config = { ...config, ...result.config };
         }
         
-        let attempts = 0;
-        const checkVideo = setInterval(() => {
-            attempts++;
-            if (document.querySelector('video')) {
-                clearInterval(checkVideo);
-                applyConfig();
-            } else if (attempts > 60) {
-                clearInterval(checkVideo);
+        setInterval(() => {
+            let video = null;
+            let maxArea = -1;
+            // Cerchiamo il video con la dimensione fisica maggiore per evitare finti video, background o thumbnail
+            for (const v of document.querySelectorAll('video')) {
+                const area = v.offsetWidth * v.offsetHeight;
+                if (area > maxArea) {
+                    maxArea = area;
+                    video = v;
+                }
             }
-        }, 500);
+
+            if (video && video !== currentVideo) {
+                currentVideo = video;
+                
+                // Clear old audio context if video changes
+                if (audioCtx) {
+                    audioCtx.close().catch(console.error);
+                    audioCtx = null;
+                    analyser = null;
+                    source = null;
+                    isAudioConnected = false;
+                }
+                stopAudioMonitoring();
+                applyConfig(video);
+            }
+        }, 1000);
     });
 }
 
-function applyConfig() {
-    const video = document.querySelector('video');
+function applyConfig(video) {
     if (!video) return;
 
     if (config.silenceSkip) {
@@ -94,12 +113,15 @@ function applyConfig() {
         setActualSpeed(video, config.skipSpeed);
     }
     
-    // Ratechange interceptor in caso Webex provi a forzare una velocità predefinita
+    // Ratechange interceptor in caso i player (Webex/Sharepoint) forzino velocità diverse
     if (!video.dataset.hasRateListener) {
         video.addEventListener('ratechange', function() {
+            // Evitiamo conflitti se il player (es. Shaka) sta bufferizzando o è fermo
+            if (video.playbackRate === 0 || video.readyState < 3) return;
+
             const targetSpeed = isSkipping ? config.skipSpeed : config.speed;
-            if (Math.abs(this.playbackRate - targetSpeed) > 0.05) {
-                this.playbackRate = targetSpeed;
+            if (Math.abs(video.playbackRate - targetSpeed) > 0.05) {
+                video.playbackRate = targetSpeed;
             }
         });
         video.dataset.hasRateListener = 'true';
@@ -121,31 +143,59 @@ function setActualSpeed(video, speed) {
 }
 
 function setupAudioMonitoring(video) {
-    if (audioCtx) {
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-        if (!monitorLoopId) {
-            monitorAudio(video);
-        }
-        return;
-    }
-
-    try {
+    if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
+    }
+    
+    // Connettere createMediaElementSource a un AudioContext 'suspended' frizza i video su Chrome/Sharepoint.
+    // Aspettiamo che il contesto sia 'running' (dopo interazione utente).
+    const tryConnect = () => {
+        if (!video || isAudioConnected) return;
+        if (audioCtx.state !== 'running') {
+            audioCtx.resume().then(() => {
+                if (audioCtx.state === 'running') connectNodes(video);
+            }).catch(e => console.log("Webex Assistant: In attesa di interazione utente per l'audio"));
+            return;
+        }
+        connectNodes(video);
+    };
+
+    if (audioCtx.state === 'running') {
+        tryConnect();
+    } else {
+        const userGestureEvents = ['click', 'keydown', 'play', 'touchstart'];
+        const gestureHandler = () => {
+            audioCtx.resume().then(() => {
+                if (!isAudioConnected) tryConnect();
+                userGestureEvents.forEach(e => document.removeEventListener(e, gestureHandler, true));
+                video.removeEventListener('play', gestureHandler);
+            }).catch(e => {});
+        };
+        userGestureEvents.forEach(e => document.addEventListener(e, gestureHandler, true));
+        video.addEventListener('play', gestureHandler);
+        tryConnect();
+    }
+}
+
+function connectNodes(video) {
+    if (isAudioConnected) return;
+    try {
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.1; // Rende il grafico reattivo, scende veloce quando si interrompe la voce
+        analyser.smoothingTimeConstant = 0.1; // Rende il grafico reattivo
 
         source = audioCtx.createMediaElementSource(video);
         source.connect(analyser);
         analyser.connect(audioCtx.destination);
+        isAudioConnected = true;
         
-        monitorAudio(video);
-        console.log("Webex Assistant: Silence Skipper Iniziato.");
+        if (!monitorLoopId) {
+            monitorAudio(video);
+        }
+        console.log("Polimi Webex Assistant: Silence Skipper Iniziato.");
     } catch (e) {
-        console.error("Webex Assistant: Errore setup Web Audio", e);
+        console.error("Polimi Webex Assistant: Errore setup Web Audio", e);
     }
 }
 
@@ -166,10 +216,11 @@ function monitorAudio(video) {
 
     let sum = 0;
     for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
+        sum += Math.abs(dataArray[i]);
     }
     let average = sum / dataArray.length;
-    let volumePercent = (average / 255) * 100;
+    // Amplifichiamo leggermente il segnale per renderlo più leggibile nei video Sharepoint che hanno volume basso
+    let volumePercent = (average / 255) * 100 * 1.5;
 
     // Seleziona la logica solo se il video sta andando e non sta bufferizzando
     if (!video.paused) {

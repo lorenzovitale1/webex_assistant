@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Webex Assistant",
+  "name": "Polimi Webex Assistant",
   "version": "1.1",
   "description": "Controlla la velocita di riproduzione dei video Webex e salta i silenzi automaticamente.",
   "permissions": [
@@ -8,7 +8,8 @@
     "storage"
   ],
   "host_permissions": [
-    "*://*.webex.com/*"
+    "*://*.webex.com/*",
+    "*://*.sharepoint.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -26,7 +27,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.webex.com/*"
+        "*://*.webex.com/*",
+        "*://*.sharepoint.com/*"
       ],
       "all_frames": true,
       "js": [

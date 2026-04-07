@@ -1,6 +1,6 @@
-# 🚀 Webex Assistant
+# 🚀 Polimi Webex Assistant
 
-Webex Assistant è un'estensione per Google Chrome (e browser basati su Chromium) progettata per migliorare l'esperienza di riproduzione dei video e delle lezioni su Webex. Ti permette di:
+Polimi Webex Assistant è un'estensione per Google Chrome (e browser basati su Chromium) progettata per migliorare l'esperienza di riproduzione dei video e delle lezioni su Webex e Microsoft Stream (SharePoint). Ti permette di:
 - **Saltare automaticamente i silenzi** per risparmiare tempo durante la visione delle registrazioni.
 - **Controllare granularmente la velocità di riproduzione**, andando oltre i limiti standard del player originale.
 - **Inserire automaticamente la tua email istituzionale/studente** durante il login su Webex.
@@ -36,8 +36,8 @@ Segui attentamente questi passaggi:
 5. Fai clic su **Seleziona cartella**.
 
 ### Passo 5: Fatto! 🎉
-L'estensione apparirà ora nella tua lista e sarà subito funzionante sui domini `*.webex.com`.
-💡 **Un consiglio in più:** Per averla sempre a portata di mano, clicca sull'icona a forma di "pezzo di puzzle" 🧩 in alto a destra su Chrome e clicca sull'icona a forma di punta da disegno (Pin) 📌 accanto a **Webex Assistant** per fissarla definitivamente alla barra principale!
+L'estensione apparirà ora nella tua lista e sarà subito funzionante sui domini `*.webex.com` e `*.sharepoint.com`.
+💡 **Un consiglio in più:** Per averla sempre a portata di mano, clicca sull'icona a forma di "pezzo di puzzle" 🧩 in alto a destra su Chrome e clicca sull'icona a forma di punta da disegno (Pin) 📌 accanto a **Polimi Webex Assistant** per fissarla definitivamente alla barra principale!
 
 ---
 
