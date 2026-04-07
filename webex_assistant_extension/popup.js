@@ -12,12 +12,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationLabel = document.getElementById('duration-label');
     const skipSpeedSlider = document.getElementById('skip-speed-slider');
     const skipSpeedLabel = document.getElementById('skip-speed-label');
+    const remainingTimeLabel = document.getElementById('remaining-time-label');
+    const remainingTimeToggle = document.getElementById('remaining-time-toggle');
+
+    let cachedDuration = 0;
+    let cachedCurrentTime = 0;
+
+    // Helper: formatta i secondi in HH:MM:SS
+    const formatTime = (totalSeconds) => {
+        if (!totalSeconds || isNaN(totalSeconds) || totalSeconds < 0) return "--:--:--";
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = Math.floor(totalSeconds % 60);
+        if (h > 0) return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
 
     // Default config
     let config = {
         studentEmail: "",
         speed: 1.0,
         silenceSkip: false,
+        showRemainingTime: true,
         threshold: 2.0,
         silenceDuration: 1.0,
         skipSpeed: 8.0
@@ -38,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         speedLabel.textContent = parseFloat(state.speed).toFixed(2) + 'x';
 
         silenceToggle.checked = state.silenceSkip || false;
+        remainingTimeToggle.checked = state.showRemainingTime !== false;
         
         thresholdSlider.value = state.threshold !== undefined ? state.threshold : 2.0;
         thresholdLabel.textContent = parseFloat(state.threshold !== undefined ? state.threshold : 2.0).toFixed(1) + '%';
@@ -47,6 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         skipSpeedSlider.value = state.skipSpeed || 8;
         skipSpeedLabel.textContent = parseFloat(state.skipSpeed || 8).toFixed(2) + 'x';
+        
+        updateRemainingTimeLabel();
+    };
+
+    const updateRemainingTimeLabel = () => {
+        if (cachedDuration > 0) {
+            const timeLeft = cachedDuration - cachedCurrentTime;
+            const projectedTimeLeft = timeLeft / parseFloat(speedSlider.value);
+            remainingTimeLabel.textContent = "-" + formatTime(projectedTimeLeft);
+        } else {
+            remainingTimeLabel.textContent = "--:--:--";
+        }
     };
 
     // Invia parametri e salva nello storage
@@ -55,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             studentEmail: studentEmailInput.value.trim(),
             speed: parseFloat(speedSlider.value),
             silenceSkip: silenceToggle.checked,
+            showRemainingTime: remainingTimeToggle.checked,
             threshold: parseFloat(thresholdSlider.value),
             silenceDuration: parseFloat(durationSlider.value),
             skipSpeed: parseFloat(skipSpeedSlider.value)
@@ -69,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     studentEmailInput.addEventListener('change', sendConfig);
     speedSlider.addEventListener('input', sendConfig);
     silenceToggle.addEventListener('change', sendConfig);
+    remainingTimeToggle.addEventListener('change', sendConfig);
     thresholdSlider.addEventListener('input', sendConfig);
     durationSlider.addEventListener('input', sendConfig);
     skipSpeedSlider.addEventListener('input', sendConfig);
@@ -76,5 +107,18 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.addEventListener('click', () => {
         speedSlider.value = 1.0;
         sendConfig();
+    });
+
+    // Richiedi i dati del video alla pagina
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+            chrome.tabs.sendMessage(tabs[0].id, { command: "getVideoState" }, (response) => {
+                if (response && response.duration) {
+                    cachedDuration = response.duration;
+                    cachedCurrentTime = response.currentTime;
+                    updateRemainingTimeLabel();
+                }
+            });
+        }
     });
 });

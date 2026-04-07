@@ -2,6 +2,7 @@ let config = {
     studentEmail: "",
     speed: 1.0,
     silenceSkip: false,
+    showRemainingTime: true,
     threshold: 2.0,
     silenceDuration: 1.0,
     skipSpeed: 8.0
@@ -22,11 +23,21 @@ if (window.location.hostname.includes("idbroker-eu.webex.com")) {
     handleVideoPlayer();
 }
 
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.command === "getVideoState") {
+        if (currentVideo) {
+            sendResponse({ duration: currentVideo.duration, currentTime: currentVideo.currentTime });
+        } else {
+            sendResponse({});
+        }
+    }
+});
+
 function handleSSOLogin() {
     chrome.storage.local.get(['config'], (result) => {
         const studentEmail = result.config?.studentEmail;
         if (!studentEmail) return;
-        
+
         let attempts = 0;
         const attemptLogin = setInterval(() => {
             attempts++;
@@ -38,7 +49,7 @@ function handleSSOLogin() {
                 emailInput.dispatchEvent(new Event('input', { bubbles: true }));
                 emailInput.dispatchEvent(new Event('blur', { bubbles: true }));
                 submitBtn.disabled = false;
-                
+
                 // La pagina potrebbe chiamare processForm se facciamo submit
                 if (typeof window.processForm === 'function') {
                     window.processForm();
@@ -66,7 +77,7 @@ function handleVideoPlayer() {
         if (result.config) {
             config = { ...config, ...result.config };
         }
-        
+
         setInterval(() => {
             let video = null;
             let maxArea = -1;
@@ -81,7 +92,7 @@ function handleVideoPlayer() {
 
             if (video && video !== currentVideo) {
                 currentVideo = video;
-                
+
                 // Clear old audio context if video changes
                 if (audioCtx) {
                     audioCtx.close().catch(console.error);
@@ -105,17 +116,17 @@ function applyConfig(video) {
     } else {
         stopAudioMonitoring();
     }
-    
+
     // Se lo skip del silenzio non è attivo
     if (!config.silenceSkip || !isSkipping) {
         setActualSpeed(video, config.speed);
     } else if (config.silenceSkip && isSkipping) {
         setActualSpeed(video, config.skipSpeed);
     }
-    
+
     // Ratechange interceptor in caso i player (Webex/Sharepoint) forzino velocità diverse
     if (!video.dataset.hasRateListener) {
-        video.addEventListener('ratechange', function() {
+        video.addEventListener('ratechange', function () {
             // Evitiamo conflitti se il player (es. Shaka) sta bufferizzando o è fermo
             if (video.playbackRate === 0 || video.readyState < 3) return;
 
@@ -126,11 +137,72 @@ function applyConfig(video) {
         });
         video.dataset.hasRateListener = 'true';
     }
+
+    // Timeupdate interceptor per mostrare il tempo rimanente a schermo
+    if (!video.dataset.hasTimeListener) {
+        let remTimeSpan = document.getElementById('polimi-rem-time');
+        video.addEventListener('timeupdate', function () {
+            if (config.showRemainingTime === false) {
+                if (remTimeSpan) remTimeSpan.style.display = 'none';
+                return;
+            }
+
+            const timeLeft = this.duration - this.currentTime;
+            if (isNaN(timeLeft) || timeLeft <= 0) return;
+
+            const projectedLeft = timeLeft / this.playbackRate;
+            const text = " [- " + formatTimeContent(projectedLeft) + "]";
+
+            if (!remTimeSpan) {
+                remTimeSpan = document.createElement('span');
+                remTimeSpan.id = 'polimi-rem-time';
+                remTimeSpan.style.color = '#0078d4';
+                remTimeSpan.style.marginLeft = '8px';
+                remTimeSpan.style.fontSize = '0.9em';
+                remTimeSpan.style.fontWeight = 'bold';
+
+                // Cerca div Sharepoint compatibile (ha aria-hidden e text content come "1:44:13 / 2:20:42")
+                const findSharepointContainer = () => {
+                    const divs = document.querySelectorAll('div[aria-hidden="true"]');
+                    for (const d of divs) {
+                        if (d.textContent && d.textContent.includes(' / ') && /\d:\d\d/.test(d.textContent)) {
+                            return d.parentElement;
+                        }
+                    }
+                    return null;
+                };
+
+                // Euristiche di iniezione: Webex (.vjs*, wxp-time-display) o generiche Sharepoint/FluentUI
+                let container = document.querySelector('wxp-time-display')
+                    || document.querySelector('.vjs-time-control')
+                    || document.querySelector('.vjs-duration-display')
+                    || findSharepointContainer();
+
+                if (container) {
+                    container.appendChild(remTimeSpan);
+                }
+            }
+
+            if (remTimeSpan && remTimeSpan.parentElement) {
+                remTimeSpan.style.display = 'inline';
+                remTimeSpan.textContent = text;
+            }
+        });
+        video.dataset.hasTimeListener = 'true';
+    }
+}
+
+function formatTimeContent(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = Math.floor(totalSeconds % 60);
+    if (h > 0) return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 function setActualSpeed(video, speed) {
     video.playbackRate = speed;
-    
+
     // Aggiorna visivamente il player nativo se presente
     const webexSpeedBtn = document.querySelector('.wxp-playback-rate-button');
     if (webexSpeedBtn) {
@@ -147,7 +219,7 @@ function setupAudioMonitoring(video) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
     }
-    
+
     // Connettere createMediaElementSource a un AudioContext 'suspended' frizza i video su Chrome/Sharepoint.
     // Aspettiamo che il contesto sia 'running' (dopo interazione utente).
     const tryConnect = () => {
@@ -170,7 +242,7 @@ function setupAudioMonitoring(video) {
                 if (!isAudioConnected) tryConnect();
                 userGestureEvents.forEach(e => document.removeEventListener(e, gestureHandler, true));
                 video.removeEventListener('play', gestureHandler);
-            }).catch(e => {});
+            }).catch(e => { });
         };
         userGestureEvents.forEach(e => document.addEventListener(e, gestureHandler, true));
         video.addEventListener('play', gestureHandler);
@@ -189,7 +261,7 @@ function connectNodes(video) {
         source.connect(analyser);
         analyser.connect(audioCtx.destination);
         isAudioConnected = true;
-        
+
         if (!monitorLoopId) {
             monitorAudio(video);
         }

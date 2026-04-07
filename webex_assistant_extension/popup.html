@@ -166,6 +166,18 @@
     <div class="section">
         <div class="section-title">Velocità di Riproduzione</div>
         <div class="speed-display" id="speed-label">1.00x</div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+            Tempo rimanente: <strong id="remaining-time-label" style="color: #0078d4;">--:--:--</strong>
+        </div>
+
+        <div class="param-row" style="margin-bottom: 15px;">
+            <span>Mostra nel Player</span>
+            <label class="switch">
+                <input type="checkbox" id="remaining-time-toggle">
+                <span class="slider-toggle"></span>
+            </label>
+        </div>
+
         <div class="slider-container">
             <input type="range" id="speed-slider" min="0.25" max="10" step="0.25" value="1">
             <div class="controls">
