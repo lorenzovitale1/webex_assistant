@@ -12,9 +12,9 @@ Polimi Webex Assistant è un'estensione per Google Chrome (e browser basati su C
 Essendo attualmente disponibile sotto forma di sorgente diretta, puoi installare Webex Assistant caricandolo manualmente in "Modalità Sviluppatore".
 Segui attentamente questi passaggi:
 
-### Passo 1: Scarica l'estensione
-1. Vai nella pagina principale di questa repository GitHub.
-2. Clicca sul pulsante verde **Code** in alto a destra e seleziona **Download ZIP**.
+### Passo 1: Scarica l'estensione (Release)
+1. Vai nella pagina **Releases** di questa repository (sulla colonna laterale destra di GitHub) oppure usa questo link: **[Releases](https://github.com/lorenzovitale1/webex_assistant/releases)**
+2. Clicca sull'ultima versione disponibile e scarica il file **`polimi-webex-assistant-vX.X.zip`**.
 3. Assicurati che lo scaricamento sia stato completato sul tuo computer.
 
 ### Passo 2: Estrai e posiziona la cartella in un luogo definitivo
