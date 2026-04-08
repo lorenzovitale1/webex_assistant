@@ -109,16 +109,24 @@ document.addEventListener('DOMContentLoaded', () => {
         sendConfig();
     });
 
-    // Richiedi i dati del video alla pagina
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-            chrome.tabs.sendMessage(tabs[0].id, { command: "getVideoState" }, (response) => {
-                if (response && response.duration) {
-                    cachedDuration = response.duration;
-                    cachedCurrentTime = response.currentTime;
-                    updateRemainingTimeLabel();
-                }
-            });
-        }
-    });
+    // Funzione per richiedere i dati del video alla pagina
+    const requestVideoState = () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]) {
+                chrome.tabs.sendMessage(tabs[0].id, { command: "getVideoState" }, (response) => {
+                    if (response && response.duration) {
+                        cachedDuration = response.duration;
+                        cachedCurrentTime = response.currentTime;
+                        updateRemainingTimeLabel();
+                    }
+                });
+            }
+        });
+    };
+
+    // Richiedi subito i dati
+    requestVideoState();
+
+    // Imposta un intervallo per aggiornare i dati in tempo reale finché il popup è aperto
+    setInterval(requestVideoState, 1000);
 });
