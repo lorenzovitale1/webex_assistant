@@ -156,7 +156,7 @@ function applyConfig(video) {
             if (!remTimeSpan) {
                 remTimeSpan = document.createElement('span');
                 remTimeSpan.id = 'polimi-rem-time';
-                remTimeSpan.style.color = '#0078d4';
+                remTimeSpan.style.color = '#3ad779';
                 remTimeSpan.style.marginLeft = '8px';
                 remTimeSpan.style.fontSize = '0.9em';
                 remTimeSpan.style.fontWeight = 'bold';

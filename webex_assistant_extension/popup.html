@@ -6,13 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polimi Webex Assistant</title>
     <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-hover: #1e45b2;
+            --accent: #3ad779;
+            
+            --bg-main: #f9f9fb;
+            --bg-element: #fff;
+            --bg-link: #f1f1f1;
+            --bg-toggle: #ccc;
+            
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-dark: #222;
+            --text-light: #555;
+            --text-button: white;
+            
+            --border-light: #eee;
+            --border-medium: #ccc;
+            --border-dark: #d1d1d1;
+            
+            --shadow: rgba(0, 0, 0, 0.1);
+            --toggle-knob: white;
+        }
+
         body {
             width: 320px;
             padding: 15px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
-            background-color: #f9f9fb;
-            color: #333;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             margin: 0;
             box-sizing: border-box;
         }
@@ -21,15 +45,15 @@
             margin-top: 0;
             margin-bottom: 15px;
             font-size: 16px;
-            color: #0078d4;
+            color: var(--primary);
         }
 
         .section {
-            background: #fff;
+            background: var(--bg-element);
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--shadow);
         }
 
         .section-title {
@@ -37,7 +61,7 @@
             font-weight: 600;
             margin-bottom: 10px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-light);
             padding-bottom: 5px;
             display: flex;
             justify-content: space-between;
@@ -51,12 +75,13 @@
         input[type="range"] {
             width: 100%;
             cursor: pointer;
+            accent-color: var(--primary);
         }
 
         .speed-display {
             font-size: 24px;
             font-weight: bold;
-            color: #222;
+            color: var(--text-dark);
             margin-bottom: 5px;
         }
 
@@ -65,12 +90,12 @@
             justify-content: space-between;
             margin-top: 5px;
             font-size: 11px;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         button {
-            background-color: #0078d4;
-            color: white;
+            background-color: var(--primary);
+            color: var(--text-button);
             border: none;
             padding: 8px 16px;
             border-radius: 4px;
@@ -81,7 +106,7 @@
         }
 
         button:hover {
-            background-color: #005a9e;
+            background-color: var(--primary-hover);
         }
 
         /* Toggle Switch */
@@ -105,7 +130,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: var(--bg-toggle);
             transition: .4s;
             border-radius: 20px;
         }
@@ -117,13 +142,13 @@
             width: 14px;
             left: 3px;
             bottom: 3px;
-            background-color: white;
+            background-color: var(--text-button);
             transition: .4s;
             border-radius: 50%;
         }
 
         input:checked+.slider-toggle {
-            background-color: #0078d4;
+            background-color: var(--primary);
         }
 
         input:checked+.slider-toggle:before {
@@ -140,7 +165,7 @@
 
         .param-row span.val {
             font-weight: bold;
-            color: #0078d4;
+            color: var(--primary);
         }
     </style>
 </head>
@@ -159,15 +184,15 @@
         </div>
         <div class="slider-container" style="margin-top: 5px;">
             <input type="email" id="student-email" placeholder="nome@mail.polimi.it"
-                style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid var(--border-medium); border-radius: 4px;">
         </div>
     </div>
 
     <div class="section">
         <div class="section-title">Velocità di Riproduzione</div>
         <div class="speed-display" id="speed-label">1.00x</div>
-        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-            Tempo rimanente: <strong id="remaining-time-label" style="color: #0078d4;">--:--:--</strong>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+            Tempo rimanente: <strong id="remaining-time-label" style="color: var(--accent);">--:--:--</strong>
         </div>
 
         <div class="param-row" style="margin-bottom: 15px;">
@@ -223,7 +248,7 @@
     </div>
 
     <a href="https://github.com/lorenzovitale1/webex_assistant/issues" target="_blank"
-        style="display: block; width: 100%; box-sizing: border-box; text-decoration: none; background-color: #f1f1f1; color: #555; padding: 10px; border-radius: 4px; font-size: 13px; font-weight: 500; border: 1px solid #d1d1d1; transition: background-color 0.2s;">
+        style="display: block; width: 100%; box-sizing: border-box; text-decoration: none; background-color: var(--bg-link); color: var(--text-light); padding: 10px; border-radius: 4px; font-size: 13px; font-weight: 500; border: 1px solid var(--border-dark); transition: background-color 0.2s;">
         🐛 Segnala un Problema/Bug
     </a>
 
