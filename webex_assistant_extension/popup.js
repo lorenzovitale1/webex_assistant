@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper: formatta i secondi in HH:MM:SS
     const formatTime = (totalSeconds) => {
-        if (!totalSeconds || isNaN(totalSeconds) || totalSeconds < 0) return "--:--:--";
+        if (!totalSeconds || !isFinite(totalSeconds) || totalSeconds < 0) return "--:--:--";
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         const s = Math.floor(totalSeconds % 60);

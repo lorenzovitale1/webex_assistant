@@ -193,6 +193,7 @@ function applyConfig(video) {
 }
 
 function formatTimeContent(totalSeconds) {
+    if (!totalSeconds || !isFinite(totalSeconds) || totalSeconds < 0) return "--:--:--";
     const h = Math.floor(totalSeconds / 3600);
     const m = Math.floor((totalSeconds % 3600) / 60);
     const s = Math.floor(totalSeconds % 60);
