@@ -3,12 +3,93 @@ let config = {
     speed: 1.0,
     silenceSkip: false,
     showRemainingTime: true,
+    darkMode: false,
     threshold: 2.0,
     silenceDuration: 1.0,
     skipSpeed: 8.0
 };
 
-// Status Web Audio API
+// --- DARK MODE ---
+const DARK_MODE_STYLE_ID = '__polimi-dark-style';
+const DARK_MODE_CLASS = '__polimi-dark';
+
+function injectDarkModeStyle() {
+    if (document.getElementById(DARK_MODE_STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = DARK_MODE_STYLE_ID;
+    style.textContent = `
+        /* === POLIMI DARK MODE === */
+        html.${DARK_MODE_CLASS} {
+            filter: invert(1) hue-rotate(180deg) !important;
+            background-color: #111 !important;
+        }
+
+        /* Re-invert: video e canvas (vanno mostrati come sono) */
+        html.${DARK_MODE_CLASS} video,
+        html.${DARK_MODE_CLASS} canvas {
+            filter: invert(1) hue-rotate(180deg) !important;
+        }
+
+        /* Re-invert: wrapper player Webex (vjs + wxp) */
+        html.${DARK_MODE_CLASS} .vjs-tech,
+        html.${DARK_MODE_CLASS} .wxp-video-wrapper video,
+        html.${DARK_MODE_CLASS} .vjs-poster {
+            filter: invert(1) hue-rotate(180deg) !important;
+        }
+
+        /* Re-invert: anteprime sulla barra del video (usano background-image su div, non <img>)
+           .vjs-thumbnails-tooltip-img = anteprima hover Webex classico
+           .wxp-progress-bar-tip-img   = anteprima hover player wxp */
+        html.${DARK_MODE_CLASS} .vjs-thumbnails-tooltip-img,
+        html.${DARK_MODE_CLASS} .wxp-progress-bar-tip-img {
+            filter: invert(1) hue-rotate(180deg) !important;
+        }
+
+        /* Re-invert: thumbnail, anteprime e immagini di copertina */
+        html.${DARK_MODE_CLASS} img {
+            filter: invert(1) hue-rotate(180deg) !important;
+        }
+
+        /* Re-invert: iframe (es. player stream dentro sharepoint) */
+        html.${DARK_MODE_CLASS} iframe {
+            filter: invert(1) hue-rotate(180deg) !important;
+        }
+
+        /* FIX logo Polimi (PNG con sfondo trasparente):
+           NON re-invertire: lasciamo che l'html invert lo trasformi
+           da logo scuro -> logo chiaro su sfondo scuro (effetto desiderato) */
+        html.${DARK_MODE_CLASS} img.logo-polimi,
+        html.${DARK_MODE_CLASS} img[alt="logo-polimi"] {
+            filter: none !important;
+            background-color: transparent !important;
+        }
+
+        /* FIX RecMan - Toolbar: il background esplicito diventa nero dopo inversione.
+           Impostiamo #c8c8c8 in CSS -> dopo inversione html appare come ~#373737 (grigio scuro) */
+        html.${DARK_MODE_CLASS} .addons-toolBar-css,
+        html.${DARK_MODE_CLASS} .ui-widget-header {
+            background-color: #c8c8c8 !important;
+        }
+
+        /* FIX RecMan - Righe alternate .pari: grigio chiaro -> quasi nero dopo inversione.
+           Impostiamo #d8d8d8 in CSS -> dopo inversione appare come ~#272727 (riconoscibile dal nero puro) */
+        html.${DARK_MODE_CLASS} tr.pari {
+            background-color: #d8d8d8 !important;
+        }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+}
+
+function applyDarkMode(enabled) {
+    injectDarkModeStyle();
+    if (enabled) {
+        document.documentElement.classList.add(DARK_MODE_CLASS);
+    } else {
+        document.documentElement.classList.remove(DARK_MODE_CLASS);
+    }
+}
+// --- END DARK MODE ---
+
 let audioCtx = null;
 let analyser = null;
 let source = null;
@@ -23,6 +104,13 @@ if (window.location.hostname.includes("idbroker-eu.webex.com")) {
 } else {
     handleVideoPlayer();
 }
+
+// Leggi e applica subito il dark mode (anche su pagine senza video, es. RecMan)
+chrome.storage.local.get(['config'], (result) => {
+    if (result.config?.darkMode) {
+        applyDarkMode(true);
+    }
+});
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.command === "getVideoState") {
@@ -71,6 +159,8 @@ function handleVideoPlayer() {
         if (namespace === 'local' && changes.config) {
             config = { ...config, ...changes.config.newValue };
             if (currentVideo) applyConfig(currentVideo);
+            // Aggiorna il dark mode in tempo reale
+            applyDarkMode(config.darkMode || false);
         }
     });
 
@@ -78,6 +168,7 @@ function handleVideoPlayer() {
         if (result.config) {
             config = { ...config, ...result.config };
         }
+        applyDarkMode(config.darkMode || false);
 
         setInterval(() => {
             let video = null;

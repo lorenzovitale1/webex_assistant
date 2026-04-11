@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const skipSpeedLabel = document.getElementById('skip-speed-label');
     const remainingTimeLabel = document.getElementById('remaining-time-label');
     const remainingTimeToggle = document.getElementById('remaining-time-toggle');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
 
     let cachedDuration = 0;
     let cachedCurrentTime = 0;
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         speed: 1.0,
         silenceSkip: false,
         showRemainingTime: true,
+        darkMode: false,
         threshold: 2.0,
         silenceDuration: 1.0,
         skipSpeed: 8.0
@@ -63,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         silenceToggle.checked = state.silenceSkip || false;
         remainingTimeToggle.checked = state.showRemainingTime !== false;
+        darkModeToggle.checked = state.darkMode || false;
         
         thresholdSlider.value = state.threshold !== undefined ? state.threshold : 2.0;
         thresholdLabel.textContent = parseFloat(state.threshold !== undefined ? state.threshold : 2.0).toFixed(1) + '%';
@@ -74,6 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
         skipSpeedLabel.textContent = parseFloat(state.skipSpeed || 8).toFixed(2) + 'x';
         
         updateRemainingTimeLabel();
+        applyPopupDarkMode(state.darkMode || false);
+    };
+
+    const applyPopupDarkMode = (enabled) => {
+        if (enabled) {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
     };
 
     const updateRemainingTimeLabel = () => {
@@ -93,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             speed: parseFloat(speedSlider.value),
             silenceSkip: silenceToggle.checked,
             showRemainingTime: remainingTimeToggle.checked,
+            darkMode: darkModeToggle.checked,
             threshold: parseFloat(thresholdSlider.value),
             silenceDuration: parseFloat(durationSlider.value),
             skipSpeed: parseFloat(skipSpeedSlider.value)
@@ -108,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     speedSlider.addEventListener('input', sendConfig);
     silenceToggle.addEventListener('change', sendConfig);
     remainingTimeToggle.addEventListener('change', sendConfig);
+    darkModeToggle.addEventListener('change', sendConfig);
     thresholdSlider.addEventListener('input', sendConfig);
     durationSlider.addEventListener('input', sendConfig);
     skipSpeedSlider.addEventListener('input', sendConfig);

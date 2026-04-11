@@ -10,24 +10,59 @@
             --primary: #1a73e8;
             --primary-hover: #1e45b2;
             --accent: #3ad779;
-            
+
             --bg-main: #f9f9fb;
             --bg-element: #fff;
             --bg-link: #f1f1f1;
             --bg-toggle: #ccc;
-            
+
             --text-primary: #333;
             --text-secondary: #666;
             --text-dark: #222;
             --text-light: #555;
             --text-button: white;
-            
+
             --border-light: #eee;
             --border-medium: #ccc;
             --border-dark: #d1d1d1;
-            
+
             --shadow: rgba(0, 0, 0, 0.1);
             --toggle-knob: white;
+        }
+
+        /* === DARK MODE POPUP === */
+        body.dark {
+            --primary: #5a9cf8;
+            --primary-hover: #7ab4ff;
+            --accent: #3ad779;
+
+            --bg-main: #1a1a1e;
+            --bg-element: #26262c;
+            --bg-link: #2e2e36;
+            --bg-toggle: #555;
+
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaa;
+            --text-dark: #f0f0f0;
+            --text-light: #bbb;
+            --text-button: white;
+
+            --border-light: #3a3a44;
+            --border-medium: #555;
+            --border-dark: #444;
+
+            --shadow: rgba(0, 0, 0, 0.4);
+            --toggle-knob: white;
+        }
+
+        body.dark #student-email {
+            background-color: #1e1e24;
+            color: #e0e0e0;
+            border-color: var(--border-medium);
+        }
+
+        body.dark #student-email::placeholder {
+            color: #777;
         }
 
         body {
@@ -66,6 +101,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .section-title--no-border {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         .slider-container {
@@ -247,12 +288,30 @@
         </div>
     </div>
 
+    <div class="section">
+        <div class="section-title section-title--no-border">
+            Modalità Scura
+            <label class="switch">
+                <input type="checkbox" id="dark-mode-toggle">
+                <span class="slider-toggle"></span>
+            </label>
+        </div>
+    </div>
+
     <a href="https://github.com/lorenzovitale1/webex_assistant/issues" target="_blank"
         style="display: block; width: 100%; box-sizing: border-box; text-decoration: none; background-color: var(--bg-link); color: var(--text-light); padding: 10px; border-radius: 4px; font-size: 13px; font-weight: 500; border: 1px solid var(--border-dark); transition: background-color 0.2s;">
         🐛 Segnala un Problema/Bug
     </a>
 
     <script src="popup.js"></script>
+    <!-- Script inline: applica tema scuro al body PRIMA del rendering per evitare flash -->
+    <script>
+        chrome.storage.local.get(['config'], function(result) {
+            if (result.config && result.config.darkMode) {
+                document.body.classList.add('dark');
+            }
+        });
+    </script>
 </body>
 
 </html>
