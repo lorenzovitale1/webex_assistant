@@ -47,6 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI(config);
     });
 
+    // Se il valore cambia da un'altra parte (es. click nel player), aggiorna live il popup
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace === 'local' && changes.config) {
+            config = { ...config, ...changes.config.newValue };
+            updateUI(config);
+        }
+    });
+
     // Funzione per aggiornare l'interfaccia utente partendo dai dati
     const updateUI = (state) => {
         studentEmailInput.value = state.studentEmail || "";

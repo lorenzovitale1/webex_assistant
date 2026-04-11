@@ -16,6 +16,7 @@ let isSkipping = false;
 let monitorLoopId = null;
 let silenceStart = null;
 let isAudioConnected = false;
+window._polimiVideoSpeedExpected = null;
 
 if (window.location.hostname.includes("idbroker-eu.webex.com")) {
     handleSSOLogin();
@@ -131,6 +132,12 @@ function applyConfig(video) {
             if (video.playbackRate === 0 || video.readyState < 3) return;
 
             const targetSpeed = isSkipping ? config.skipSpeed : config.speed;
+
+            // Se l'utente ha appena cliccato su una velocità nativa, permettiamo la modifica
+            if (window._polimiVideoSpeedExpected && Math.abs(video.playbackRate - window._polimiVideoSpeedExpected) < 0.05) {
+                return;
+            }
+
             if (Math.abs(video.playbackRate - targetSpeed) > 0.05) {
                 video.playbackRate = targetSpeed;
             }
@@ -319,4 +326,37 @@ function monitorAudio(video) {
     monitorLoopId = requestAnimationFrame(() => monitorAudio(video));
 }
 
-// End of script
+// Intercetta i click dell'utente sulle opzioni di velocità del player nativo
+document.addEventListener('click', function(e) {
+    if (!e.isTrusted) return;
+
+    // Aggiunti i role generici usati da Fluent UI (SharePoint) come [role="menuitemradio"] ecc.
+    let el = e.target.closest('li, button, div.vjs-menu-item, [role="menuitem"], [role="menuitemradio"], [role="option"]');
+    if (!el) return;
+
+    // Ignora i bottoni principali (es. i combobox che aprono il menu)
+    if (el.hasAttribute('aria-expanded') || el.getAttribute('role') === 'combobox') return;
+
+    let newSpeed = null;
+
+    if (el.hasAttribute('data-rate')) {
+        newSpeed = parseFloat(el.getAttribute('data-rate'));
+    } else {
+        // Rimuove spazi vuoti, ritorni a capo o icone (es. le spunte "✓ 1.5x") estraendo solo la cifra
+        let text = (el.innerText || el.textContent || "").toLowerCase().replace(/[^0-9\.x]/g, '');
+        let match = text.match(/^([0-9]+(?:\.[0-9]+)?)x?$/);
+        if (match) {
+            newSpeed = parseFloat(match[1]);
+        }
+    }
+
+    if (newSpeed && !isNaN(newSpeed) && newSpeed !== config.speed && newSpeed > 0 && newSpeed <= 10) {
+        window._polimiVideoSpeedExpected = newSpeed;
+        console.log("Webex Assistant: Rilevato cambio velocità dal menu nativo a: " + newSpeed);
+        chrome.storage.local.get(['config'], (result) => {
+            const currentConfig = result.config || config;
+            currentConfig.speed = newSpeed;
+            chrome.storage.local.set({ config: currentConfig });
+        });
+    }
+}, true);
