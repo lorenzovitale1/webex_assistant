@@ -76,6 +76,32 @@ function injectDarkModeStyle() {
         html.${DARK_MODE_CLASS} tr.pari {
             background-color: #d8d8d8 !important;
         }
+
+        /* FIX Full-Screen: Il layer del full-screen (top layer) NON eredita il filter: invert del tag HTML.
+           Se non rimuoviamo i nostri re-invert, questi si applicheranno da soli, invertendo il video e le anteprime! */
+        html.${DARK_MODE_CLASS} *:fullscreen,
+        html.${DARK_MODE_CLASS} *:fullscreen video,
+        html.${DARK_MODE_CLASS} *:fullscreen canvas,
+        html.${DARK_MODE_CLASS} *:fullscreen .vjs-tech,
+        html.${DARK_MODE_CLASS} *:fullscreen .wxp-video-wrapper video,
+        html.${DARK_MODE_CLASS} *:fullscreen .vjs-poster,
+        html.${DARK_MODE_CLASS} *:fullscreen .vjs-thumbnails-tooltip-img,
+        html.${DARK_MODE_CLASS} *:fullscreen .wxp-progress-bar-tip-img,
+        html.${DARK_MODE_CLASS} *:fullscreen img,
+        html.${DARK_MODE_CLASS} *:fullscreen iframe,
+        
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen video,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen canvas,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen .vjs-tech,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen .wxp-video-wrapper video,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen .vjs-poster,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen .vjs-thumbnails-tooltip-img,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen .wxp-progress-bar-tip-img,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen img,
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen iframe {
+            filter: none !important;
+        }
     `;
     (document.head || document.documentElement).appendChild(style);
 }
