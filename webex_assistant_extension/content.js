@@ -6,7 +6,10 @@ let config = {
     darkMode: false,
     threshold: 2.0,
     silenceDuration: 1.0,
-    skipSpeed: 8.0
+    skipSpeed: 8.0,
+    darkModeWebex: true,
+    darkModeSharepoint: true,
+    darkModeRecMan: true
 };
 
 // --- DARK MODE ---
@@ -24,61 +27,61 @@ function injectDarkModeStyle() {
             background-color: #111 !important;
         }
 
-        /* Re-invert: video e canvas (vanno mostrati come sono) */
+        /* Re-invert: video and canvas (they must be shown as they are) */
         html.${DARK_MODE_CLASS} video,
         html.${DARK_MODE_CLASS} canvas {
             filter: invert(1) hue-rotate(180deg) !important;
         }
 
-        /* Re-invert: wrapper player Webex (vjs + wxp) */
+        /* Re-invert: Webex player wrapper (vjs + wxp) */
         html.${DARK_MODE_CLASS} .vjs-tech,
         html.${DARK_MODE_CLASS} .wxp-video-wrapper video,
         html.${DARK_MODE_CLASS} .vjs-poster {
             filter: invert(1) hue-rotate(180deg) !important;
         }
 
-        /* Re-invert: anteprime sulla barra del video (usano background-image su div, non <img>)
-           .vjs-thumbnails-tooltip-img = anteprima hover Webex classico
-           .wxp-progress-bar-tip-img   = anteprima hover player wxp */
+        /* Re-invert: thumbnails on the video bar (they use background-image on div, not <img>)
+           .vjs-thumbnails-tooltip-img = classic Webex hover thumbnail
+           .wxp-progress-bar-tip-img   = wxp player hover thumbnail */
         html.${DARK_MODE_CLASS} .vjs-thumbnails-tooltip-img,
         html.${DARK_MODE_CLASS} .wxp-progress-bar-tip-img {
             filter: invert(1) hue-rotate(180deg) !important;
         }
 
-        /* Re-invert: thumbnail, anteprime e immagini di copertina */
+        /* Re-invert: thumbnails, previews, and cover images */
         html.${DARK_MODE_CLASS} img {
             filter: invert(1) hue-rotate(180deg) !important;
         }
 
-        /* Re-invert: iframe (es. player stream dentro sharepoint) */
+        /* Re-invert: iframe (e.g. stream player inside sharepoint) */
         html.${DARK_MODE_CLASS} iframe {
             filter: invert(1) hue-rotate(180deg) !important;
         }
 
-        /* FIX logo Polimi (PNG con sfondo trasparente):
-           NON re-invertire: lasciamo che l'html invert lo trasformi
-           da logo scuro -> logo chiaro su sfondo scuro (effetto desiderato) */
+        /* FIX Polimi logo (PNG with transparent background):
+           DO NOT re-invert: let the html invert transform it
+           from dark logo -> light logo on dark background (desired effect) */
         html.${DARK_MODE_CLASS} img.logo-polimi,
         html.${DARK_MODE_CLASS} img[alt="logo-polimi"] {
             filter: none !important;
             background-color: transparent !important;
         }
 
-        /* FIX RecMan - Toolbar: il background esplicito diventa nero dopo inversione.
-           Impostiamo #c8c8c8 in CSS -> dopo inversione html appare come ~#373737 (grigio scuro) */
+        /* FIX RecMan - Toolbar: the explicit background becomes black after inversion.
+           Set #c8c8c8 in CSS -> after html inversion it appears as ~#373737 (dark gray) */
         html.${DARK_MODE_CLASS} .addons-toolBar-css,
         html.${DARK_MODE_CLASS} .ui-widget-header {
             background-color: #c8c8c8 !important;
         }
 
-        /* FIX RecMan - Righe alternate .pari: grigio chiaro -> quasi nero dopo inversione.
-           Impostiamo #d8d8d8 in CSS -> dopo inversione appare come ~#272727 (riconoscibile dal nero puro) */
+        /* FIX RecMan - Alternating rows .pari: light gray -> almost black after inversion.
+           Set #d8d8d8 in CSS -> after inversion it appears as ~#272727 (distinguishable from pure black) */
         html.${DARK_MODE_CLASS} tr.pari {
             background-color: #d8d8d8 !important;
         }
 
-        /* FIX Full-Screen: Il layer del full-screen (top layer) NON eredita il filter: invert del tag HTML.
-           Se non rimuoviamo i nostri re-invert, questi si applicheranno da soli, invertendo il video e le anteprime! */
+        /* FIX Full-Screen: The full-screen layer (top layer) DOES NOT inherit the filter: invert of the HTML tag.
+           If we don't remove our re-inverts, they will apply on their own, inverting the video and thumbnails! */
         html.${DARK_MODE_CLASS} *:fullscreen,
         html.${DARK_MODE_CLASS} *:fullscreen video,
         html.${DARK_MODE_CLASS} *:fullscreen canvas,
@@ -107,8 +110,26 @@ function injectDarkModeStyle() {
 }
 
 function applyDarkMode(enabled) {
+    // Do not apply dark mode to login pages (already natively dark)
+    if (window.location.hostname.includes("idbroker") || document.title.includes("Accedi - Webex")) {
+        document.documentElement.classList.remove(DARK_MODE_CLASS);
+        return;
+    }
+
     injectDarkModeStyle();
-    if (enabled) {
+    
+    let isDomainEnabled = true;
+    const host = window.location.hostname;
+    
+    if (host.includes("webex.com")) {
+        isDomainEnabled = config.darkModeWebex !== false;
+    } else if (host.includes("sharepoint.com")) {
+        isDomainEnabled = config.darkModeSharepoint !== false;
+    } else if (host.includes("ceda.polimi.it")) {
+        isDomainEnabled = config.darkModeRecMan !== false;
+    }
+
+    if (enabled && isDomainEnabled) {
         document.documentElement.classList.add(DARK_MODE_CLASS);
     } else {
         document.documentElement.classList.remove(DARK_MODE_CLASS);
@@ -125,13 +146,13 @@ let silenceStart = null;
 let isAudioConnected = false;
 window._polimiVideoSpeedExpected = null;
 
-if (window.location.hostname.includes("idbroker-eu.webex.com")) {
+if (window.location.hostname.includes("idbroker") || document.title.includes("Accedi - Webex")) {
     handleSSOLogin();
 } else {
     handleVideoPlayer();
 }
 
-// Leggi e applica subito il dark mode (anche su pagine senza video, es. RecMan)
+// Read and apply dark mode immediately (even on pages without video, e.g. RecMan)
 chrome.storage.local.get(['config'], (result) => {
     if (result.config?.darkMode) {
         applyDarkMode(true);
@@ -165,7 +186,7 @@ function handleSSOLogin() {
                 emailInput.dispatchEvent(new Event('blur', { bubbles: true }));
                 submitBtn.disabled = false;
 
-                // La pagina potrebbe chiamare processForm se facciamo submit
+                // The page might call processForm if we submit
                 if (typeof window.processForm === 'function') {
                     window.processForm();
                 } else {
@@ -185,7 +206,7 @@ function handleVideoPlayer() {
         if (namespace === 'local' && changes.config) {
             config = { ...config, ...changes.config.newValue };
             if (currentVideo) applyConfig(currentVideo);
-            // Aggiorna il dark mode in tempo reale
+            // Update dark mode in real time
             applyDarkMode(config.darkMode || false);
         }
     });
@@ -199,7 +220,7 @@ function handleVideoPlayer() {
         setInterval(() => {
             let video = null;
             let maxArea = -1;
-            // Cerchiamo il video con la dimensione fisica maggiore per evitare finti video, background o thumbnail
+            // Search for the video with the largest physical dimension to avoid fake videos, backgrounds or thumbnails
             for (const v of document.querySelectorAll('video')) {
                 const area = v.offsetWidth * v.offsetHeight;
                 if (area > maxArea) {
@@ -235,22 +256,22 @@ function applyConfig(video) {
         stopAudioMonitoring();
     }
 
-    // Se lo skip del silenzio non è attivo
+    // If silence skip is not active
     if (!config.silenceSkip || !isSkipping) {
         setActualSpeed(video, config.speed);
     } else if (config.silenceSkip && isSkipping) {
         setActualSpeed(video, config.skipSpeed);
     }
 
-    // Ratechange interceptor in caso i player (Webex/Sharepoint) forzino velocità diverse
+    // Ratechange interceptor in case players (Webex/Sharepoint) force different speeds
     if (!video.dataset.hasRateListener) {
         video.addEventListener('ratechange', function () {
-            // Evitiamo conflitti se il player (es. Shaka) sta bufferizzando o è fermo
+            // Avoid conflicts if the player (e.g. Shaka) is buffering or stopped
             if (video.playbackRate === 0 || video.readyState < 3) return;
 
             const targetSpeed = isSkipping ? config.skipSpeed : config.speed;
 
-            // Se l'utente ha appena cliccato su una velocità nativa, permettiamo la modifica
+            // If the user just clicked a native speed, allow the change
             if (window._polimiVideoSpeedExpected && Math.abs(video.playbackRate - window._polimiVideoSpeedExpected) < 0.05) {
                 return;
             }
@@ -262,7 +283,7 @@ function applyConfig(video) {
         video.dataset.hasRateListener = 'true';
     }
 
-    // Timeupdate interceptor per mostrare il tempo rimanente a schermo
+    // Timeupdate interceptor to show remaining time on screen
     if (!video.dataset.hasTimeListener) {
         let remTimeSpan = document.getElementById('polimi-rem-time');
         video.addEventListener('timeupdate', function () {
@@ -285,7 +306,7 @@ function applyConfig(video) {
                 remTimeSpan.style.fontSize = '0.9em';
                 remTimeSpan.style.fontWeight = 'bold';
 
-                // Cerca div Sharepoint compatibile (ha aria-hidden e text content come "1:44:13 / 2:20:42")
+                // Search for a compatible Sharepoint div (has aria-hidden and text content like "1:44:13 / 2:20:42")
                 const findSharepointContainer = () => {
                     const divs = document.querySelectorAll('div[aria-hidden="true"]');
                     for (const d of divs) {
@@ -296,7 +317,7 @@ function applyConfig(video) {
                     return null;
                 };
 
-                // Euristiche di iniezione: Webex (.vjs*, wxp-time-display) o generiche Sharepoint/FluentUI
+                // Injection heuristics: Webex (.vjs*, wxp-time-display) or generic Sharepoint/FluentUI
                 let container = document.querySelector('wxp-time-display')
                     || document.querySelector('.vjs-time-control')
                     || document.querySelector('.vjs-duration-display')
@@ -328,7 +349,7 @@ function formatTimeContent(totalSeconds) {
 function setActualSpeed(video, speed) {
     video.playbackRate = speed;
 
-    // Aggiorna visivamente il player nativo se presente
+    // Visually update native player if present
     const webexSpeedBtn = document.querySelector('.wxp-playback-rate-button');
     if (webexSpeedBtn) {
         webexSpeedBtn.textContent = parseFloat(speed).toFixed(2) + 'X';
@@ -345,14 +366,14 @@ function setupAudioMonitoring(video) {
         audioCtx = new AudioContext();
     }
 
-    // Connettere createMediaElementSource a un AudioContext 'suspended' frizza i video su Chrome/Sharepoint.
-    // Aspettiamo che il contesto sia 'running' (dopo interazione utente).
+    // Connecting createMediaElementSource to a 'suspended' AudioContext freezes videos on Chrome/Sharepoint.
+    // We wait for the context to be 'running' (after user interaction).
     const tryConnect = () => {
         if (!video || isAudioConnected) return;
         if (audioCtx.state !== 'running') {
             audioCtx.resume().then(() => {
                 if (audioCtx.state === 'running') connectNodes(video);
-            }).catch(e => console.log("Webex Assistant: In attesa di interazione utente per l'audio"));
+            }).catch(e => console.log("Webex Assistant: Waiting for user interaction for audio"));
             return;
         }
         connectNodes(video);
@@ -380,7 +401,7 @@ function connectNodes(video) {
     try {
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.1; // Rende il grafico reattivo
+        analyser.smoothingTimeConstant = 0.1; // Makes the graph reactive
 
         source = audioCtx.createMediaElementSource(video);
         source.connect(analyser);
@@ -390,9 +411,9 @@ function connectNodes(video) {
         if (!monitorLoopId) {
             monitorAudio(video);
         }
-        console.log("Polimi Webex Assistant: Silence Skipper Iniziato.");
+        console.log("Polimi Webex Assistant: Silence Skipper Started.");
     } catch (e) {
-        console.error("Polimi Webex Assistant: Errore setup Web Audio", e);
+        console.error("Polimi Webex Assistant: Web Audio setup error", e);
     }
 }
 
@@ -416,10 +437,10 @@ function monitorAudio(video) {
         sum += Math.abs(dataArray[i]);
     }
     let average = sum / dataArray.length;
-    // Amplifichiamo leggermente il segnale per renderlo più leggibile nei video Sharepoint che hanno volume basso
+    // Slightly amplify the signal to make it more readable in Sharepoint videos that have low volume
     let volumePercent = (average / 255) * 100 * 1.5;
 
-    // Seleziona la logica solo se il video sta andando e non sta bufferizzando
+    // Run the logic only if the video is playing and not buffering
     if (!video.paused) {
         if (volumePercent <= config.threshold) {
             if (!isSkipping) {
@@ -433,7 +454,7 @@ function monitorAudio(video) {
         } else {
             silenceStart = null;
             if (isSkipping) {
-                // E' ritornata la voce
+                // Voice returned
                 isSkipping = false;
                 setActualSpeed(video, config.speed);
             }
@@ -443,15 +464,15 @@ function monitorAudio(video) {
     monitorLoopId = requestAnimationFrame(() => monitorAudio(video));
 }
 
-// Intercetta i click dell'utente sulle opzioni di velocità del player nativo
+// Intercept user clicks on native player speed options
 document.addEventListener('click', function(e) {
     if (!e.isTrusted) return;
 
-    // Aggiunti i role generici usati da Fluent UI (SharePoint) come [role="menuitemradio"] ecc.
+    // Added generic roles used by Fluent UI (SharePoint) like [role="menuitemradio"] etc.
     let el = e.target.closest('li, button, div.vjs-menu-item, [role="menuitem"], [role="menuitemradio"], [role="option"]');
     if (!el) return;
 
-    // Ignora i bottoni principali (es. i combobox che aprono il menu)
+    // Ignore main buttons (e.g. comboboxes that open the menu)
     if (el.hasAttribute('aria-expanded') || el.getAttribute('role') === 'combobox') return;
 
     let newSpeed = null;
@@ -459,7 +480,7 @@ document.addEventListener('click', function(e) {
     if (el.hasAttribute('data-rate')) {
         newSpeed = parseFloat(el.getAttribute('data-rate'));
     } else {
-        // Rimuove spazi vuoti, ritorni a capo o icone (es. le spunte "✓ 1.5x") estraendo solo la cifra
+        // Remove whitespace, line breaks or icons (e.g. checkmarks "✓ 1.5x") extracting only the number
         let text = (el.innerText || el.textContent || "").toLowerCase().replace(/[^0-9\.x]/g, '');
         let match = text.match(/^([0-9]+(?:\.[0-9]+)?)x?$/);
         if (match) {
@@ -469,7 +490,7 @@ document.addEventListener('click', function(e) {
 
     if (newSpeed && !isNaN(newSpeed) && newSpeed !== config.speed && newSpeed > 0 && newSpeed <= 10) {
         window._polimiVideoSpeedExpected = newSpeed;
-        console.log("Webex Assistant: Rilevato cambio velocità dal menu nativo a: " + newSpeed);
+        console.log("Webex Assistant: Detected speed change from native menu to: " + newSpeed);
         chrome.storage.local.get(['config'], (result) => {
             const currentConfig = result.config || config;
             currentConfig.speed = newSpeed;

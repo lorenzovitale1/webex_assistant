@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const speedSlider = document.getElementById('speed-slider');
     const speedLabel = document.getElementById('speed-label');
     const resetBtn = document.getElementById('reset-btn');
-    
+
     const silenceToggle = document.getElementById('silence-toggle');
     const thresholdSlider = document.getElementById('threshold-slider');
     const thresholdLabel = document.getElementById('threshold-label');
@@ -12,14 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationLabel = document.getElementById('duration-label');
     const skipSpeedSlider = document.getElementById('skip-speed-slider');
     const skipSpeedLabel = document.getElementById('skip-speed-label');
+
+    const saveEmailBtn = document.getElementById('save-email-btn');
     const remainingTimeLabel = document.getElementById('remaining-time-label');
     const remainingTimeToggle = document.getElementById('remaining-time-toggle');
+
     const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const darkModeExpand = document.getElementById('dark-mode-expand');
+    const darkModeOptions = document.getElementById('dark-mode-options');
+    const darkWebexToggle = document.getElementById('dark-webex-toggle');
+    const darkSharepointToggle = document.getElementById('dark-sharepoint-toggle');
+    const darkRecmanToggle = document.getElementById('dark-recman-toggle');
 
     let cachedDuration = 0;
     let cachedCurrentTime = 0;
 
-    // Helper: formatta i secondi in HH:MM:SS
+    let isSavingEmail = false;
+    const originalSaveIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`;
+    const successSaveIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    // Helper: format seconds into HH:MM:SS
     const formatTime = (totalSeconds) => {
         if (!totalSeconds || !isFinite(totalSeconds) || totalSeconds < 0) return "--:--:--";
         const h = Math.floor(totalSeconds / 3600);
@@ -36,12 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
         silenceSkip: false,
         showRemainingTime: true,
         darkMode: false,
+        darkModeWebex: true,
+        darkModeSharepoint: true,
+        darkModeRecMan: true,
         threshold: 2.0,
         silenceDuration: 1.0,
         skipSpeed: 8.0
     };
 
-    // Al caricamento, recupera lo stato globale dallo storage
+    // On load, retrieve global state from storage
     chrome.storage.local.get(['config'], (result) => {
         if (result.config) {
             config = { ...config, ...result.config };
@@ -49,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI(config);
     });
 
-    // Se il valore cambia da un'altra parte (es. click nel player), aggiorna live il popup
+    // If value changes elsewhere (e.g. player click), update popup live
     chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace === 'local' && changes.config) {
             config = { ...config, ...changes.config.newValue };
@@ -57,25 +72,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Funzione per aggiornare l'interfaccia utente partendo dai dati
     const updateUI = (state) => {
-        studentEmailInput.value = state.studentEmail || "";
+        if (document.activeElement !== studentEmailInput) {
+            studentEmailInput.value = state.studentEmail || "";
+        }
+        
+        if (isSavingEmail) {
+            saveEmailBtn.style.display = 'flex';
+        } else if (studentEmailInput.value.trim() !== (state.studentEmail || "")) {
+            saveEmailBtn.style.display = 'flex';
+        } else {
+            saveEmailBtn.style.display = 'none';
+        }
+
         speedSlider.value = state.speed;
         speedLabel.textContent = parseFloat(state.speed).toFixed(2) + 'x';
 
         silenceToggle.checked = state.silenceSkip || false;
         remainingTimeToggle.checked = state.showRemainingTime !== false;
+
         darkModeToggle.checked = state.darkMode || false;
-        
-        thresholdSlider.value = state.threshold !== undefined ? state.threshold : 2.0;
-        thresholdLabel.textContent = parseFloat(state.threshold !== undefined ? state.threshold : 2.0).toFixed(1) + '%';
-        
-        durationSlider.value = state.silenceDuration !== undefined ? state.silenceDuration : 1.0;
-        durationLabel.textContent = parseFloat(state.silenceDuration !== undefined ? state.silenceDuration : 1.0).toFixed(1) + 's';
-        
-        skipSpeedSlider.value = state.skipSpeed || 8;
-        skipSpeedLabel.textContent = parseFloat(state.skipSpeed || 8).toFixed(2) + 'x';
-        
+        darkWebexToggle.checked = state.darkModeWebex !== false;
+        darkSharepointToggle.checked = state.darkModeSharepoint !== false;
+        darkRecmanToggle.checked = state.darkModeRecMan !== false;
+
+        const thresh = state.threshold !== undefined ? state.threshold : 2.0;
+        thresholdSlider.value = thresh;
+        thresholdLabel.textContent = parseFloat(thresh).toFixed(1) + '%';
+
+        const dur = state.silenceDuration !== undefined ? state.silenceDuration : 1.0;
+        durationSlider.value = dur;
+        durationLabel.textContent = parseFloat(dur).toFixed(1) + 's';
+
+        const skip = state.skipSpeed || 8;
+        skipSpeedSlider.value = skip;
+        skipSpeedLabel.textContent = parseFloat(skip).toFixed(2) + 'x';
+
         updateRemainingTimeLabel();
         applyPopupDarkMode(state.darkMode || false);
     };
@@ -98,40 +130,106 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Invia parametri e salva nello storage
-    const sendConfig = () => {
-        config = {
-            studentEmail: studentEmailInput.value.trim(),
-            speed: parseFloat(speedSlider.value),
-            silenceSkip: silenceToggle.checked,
-            showRemainingTime: remainingTimeToggle.checked,
-            darkMode: darkModeToggle.checked,
-            threshold: parseFloat(thresholdSlider.value),
-            silenceDuration: parseFloat(durationSlider.value),
-            skipSpeed: parseFloat(skipSpeedSlider.value)
-        };
-        
-        updateUI(config);
+    // Send parameters and save to storage
+    // Helper to save a validated partial state
+    const saveState = (newState) => {
+        config = { ...config, ...newState };
+        // Always read toggle states for safety (they are booleans)
+        config.silenceSkip = silenceToggle.checked;
+        config.showRemainingTime = remainingTimeToggle.checked;
+        config.darkMode = darkModeToggle.checked;
+        config.darkModeWebex = darkWebexToggle.checked;
+        config.darkModeSharepoint = darkSharepointToggle.checked;
+        config.darkModeRecMan = darkRecmanToggle.checked;
+        // Do not overwrite email here unless explicitly requested
 
         chrome.storage.local.set({ config: config });
+        updateUI(config);
     };
 
-    // Listeners
-    studentEmailInput.addEventListener('change', sendConfig);
-    speedSlider.addEventListener('input', sendConfig);
-    silenceToggle.addEventListener('change', sendConfig);
-    remainingTimeToggle.addEventListener('change', sendConfig);
-    darkModeToggle.addEventListener('change', sendConfig);
-    thresholdSlider.addEventListener('input', sendConfig);
-    durationSlider.addEventListener('input', sendConfig);
-    skipSpeedSlider.addEventListener('input', sendConfig);
+    // Email visual feedback and button visibility
+    const checkEmailChange = () => {
+        if (studentEmailInput.value.trim() !== (config.studentEmail || "")) {
+            isSavingEmail = false;
+            saveEmailBtn.style.display = 'flex';
+            saveEmailBtn.style.opacity = '1';
+            saveEmailBtn.innerHTML = originalSaveIcon;
+            saveEmailBtn.style.color = '';
+        } else {
+            if (!isSavingEmail) {
+                saveEmailBtn.style.display = 'none';
+            }
+        }
+    };
 
-    resetBtn.addEventListener('click', () => {
-        speedSlider.value = 1.0;
-        sendConfig();
+    const handleEmailSave = () => {
+        if (studentEmailInput.value.trim() === (config.studentEmail || "")) return;
+        
+        isSavingEmail = true;
+        saveEmailBtn.innerHTML = successSaveIcon;
+        saveEmailBtn.style.color = 'var(--accent)';
+        saveEmailBtn.style.display = 'flex';
+        
+        saveState({ studentEmail: studentEmailInput.value.trim() });
+        
+        // Aspetta 1.2 secondi, poi avvia il fade out
+        setTimeout(() => {
+            if (isSavingEmail) {
+                saveEmailBtn.style.opacity = '0';
+                
+                // Dopo che l'opacità è andata a 0 (300ms), nascondi e resetta
+                setTimeout(() => {
+                    if (isSavingEmail) {
+                        isSavingEmail = false;
+                        saveEmailBtn.style.display = 'none';
+                        saveEmailBtn.style.opacity = '1';
+                        saveEmailBtn.innerHTML = originalSaveIcon;
+                        saveEmailBtn.style.color = '';
+                    }
+                }, 300);
+            }
+        }, 1200);
+    };
+
+    // Email Listeners
+    saveEmailBtn.addEventListener('click', handleEmailSave);
+    studentEmailInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleEmailSave();
+            e.target.blur();
+        }
+    });
+    studentEmailInput.addEventListener('blur', handleEmailSave);
+    studentEmailInput.addEventListener('input', checkEmailChange);
+
+    // Helper for blur on Enter (forces change event visually for various text fields)
+    const blurOnEnter = (e) => { if (e.key === 'Enter') e.target.blur(); };
+
+    // Slider Listeners (Update in real time)
+    speedSlider.addEventListener('input', (e) => saveState({ speed: parseFloat(e.target.value) }));
+    thresholdSlider.addEventListener('input', (e) => saveState({ threshold: parseFloat(e.target.value) }));
+    durationSlider.addEventListener('input', (e) => saveState({ silenceDuration: parseFloat(e.target.value) }));
+    skipSpeedSlider.addEventListener('input', (e) => saveState({ skipSpeed: parseFloat(e.target.value) }));
+
+    // Toggle Listeners
+    silenceToggle.addEventListener('change', () => saveState({}));
+    remainingTimeToggle.addEventListener('change', () => saveState({}));
+    darkModeToggle.addEventListener('change', () => saveState({}));
+    darkWebexToggle.addEventListener('change', () => saveState({}));
+    darkSharepointToggle.addEventListener('change', () => saveState({}));
+    darkRecmanToggle.addEventListener('change', () => saveState({}));
+
+    // Expand menu listener
+    darkModeExpand.addEventListener('click', () => {
+        darkModeOptions.classList.toggle('open');
+        darkModeExpand.classList.toggle('open');
     });
 
-    // Funzione per richiedere i dati del video alla pagina
+    resetBtn.addEventListener('click', () => {
+        saveState({ speed: 1.0 });
+    });
+
+    // Function to request video data from the page
     const requestVideoState = () => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]) {
@@ -146,9 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Richiedi subito i dati
+    // Request data immediately
     requestVideoState();
 
-    // Imposta un intervallo per aggiornare i dati in tempo reale finché il popup è aperto
+    // Set interval to update data in real time as long as the popup is open
     setInterval(requestVideoState, 1000);
 });

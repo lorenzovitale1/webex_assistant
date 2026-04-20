@@ -66,7 +66,7 @@
         }
 
         body {
-            width: 320px;
+            width: 340px;
             padding: 15px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
@@ -79,7 +79,7 @@
         h3 {
             margin-top: 0;
             margin-bottom: 15px;
-            font-size: 16px;
+            font-size: 18px;
             color: var(--primary);
         }
 
@@ -92,7 +92,7 @@
         }
 
         .section-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             margin-bottom: 10px;
             text-align: left;
@@ -120,7 +120,7 @@
         }
 
         .speed-display {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: var(--text-dark);
             margin-bottom: 5px;
@@ -130,7 +130,7 @@
             display: flex;
             justify-content: space-between;
             margin-top: 5px;
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-secondary);
         }
 
@@ -138,10 +138,10 @@
             background-color: var(--primary);
             color: var(--text-button);
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             transition: background-color 0.2s;
             width: 100%;
         }
@@ -200,13 +200,123 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 13px;
+            font-size: 14px;
             margin-top: 8px;
         }
 
         .param-row span.val {
             font-weight: bold;
             color: var(--primary);
+        }
+
+        .email-container {
+            position: relative;
+            margin-top: 5px;
+        }
+
+        .email-save-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            outline: none;
+            padding: 0;
+            cursor: pointer;
+            transition: color 0.2s, opacity 0.3s ease;
+            opacity: 1;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .email-save-btn:hover {
+            color: var(--primary);
+            background-color: transparent;
+        }
+
+        .email-save-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .slider-toggle:hover {
+            background-color: #b3b3b3;
+        }
+
+        body.dark .slider-toggle:hover {
+            background-color: #666;
+        }
+
+        input:checked+.slider-toggle:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .footer-info {
+            margin-top: 15px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .footer-info a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .footer-info a:hover {
+            text-decoration: underline;
+        }
+
+        .info-icon {
+            margin-left: 5px;
+            color: var(--text-secondary);
+            cursor: help;
+            vertical-align: text-bottom;
+            transition: color 0.2s;
+        }
+
+        .info-icon:hover {
+            color: var(--primary);
+        }
+
+        .expand-icon {
+            cursor: pointer;
+            transition: transform 0.3s;
+            color: var(--text-secondary);
+            padding: 2px;
+        }
+
+        .expand-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .dark-mode-options {
+            display: none;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-light);
+            margin-top: 10px;
+        }
+
+        .dark-mode-options.open {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -219,26 +329,36 @@
     </div>
 
     <div class="section">
-        <div class="section-title">Login Automatico</div>
+        <div class="section-title" title="Effettua l'accesso automatico a Webex usando la tua mail istituzionale">Login
+            Automatico</div>
         <div class="param-row">
             <span>Email Webex</span>
         </div>
-        <div class="slider-container" style="margin-top: 5px;">
+        <div class="email-container">
             <input type="email" id="student-email" placeholder="nome@mail.polimi.it"
-                style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid var(--border-medium); border-radius: 4px;">
+                style="width: 100%; box-sizing: border-box; padding: 6px 32px 6px 8px; border: 1px solid var(--border-medium); border-radius: 4px; outline: none; background: transparent; color: var(--text-dark);">
+            <button id="save-email-btn" class="email-save-btn" title="Salva Email">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+            </button>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-title">Velocità di Riproduzione</div>
+        <div class="section-title" title="Controlla la velocità di base del video">Velocità di Riproduzione</div>
         <div class="speed-display" id="speed-label">1.00x</div>
-        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
             Tempo rimanente: <strong id="remaining-time-label" style="color: var(--accent);">--:--:--</strong>
         </div>
 
-        <div class="param-row" style="margin-bottom: 15px;">
+        <div
+            style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 14px;">
             <span>Mostra nel Player</span>
-            <label class="switch">
+            <label class="switch" style="transform: translateY(2px);">
                 <input type="checkbox" id="remaining-time-toggle">
                 <span class="slider-toggle"></span>
             </label>
@@ -255,7 +375,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">
+        <div class="section-title" title="Salta automaticamente i silenzi nel video">
             Skip dei Silenzi
             <label class="switch">
                 <input type="checkbox" id="silence-toggle">
@@ -264,7 +384,16 @@
         </div>
 
         <div class="param-row">
-            <span>Soglia Volume</span>
+            <span style="display: flex; align-items: center;"
+                title="Sotto questa percentuale di volume, il video viene considerato in 'silenzio'">
+                Soglia Volume
+                <svg class="info-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </span>
             <span class="val" id="threshold-label">2.0%</span>
         </div>
         <div class="slider-container">
@@ -272,7 +401,16 @@
         </div>
 
         <div class="param-row">
-            <span>Ritardo Skip</span>
+            <span style="display: flex; align-items: center;"
+                title="Quanti secondi di silenzio ininterrotto devono passare prima che il video acceleri">
+                Ritardo Skip
+                <svg class="info-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </span>
             <span class="val" id="duration-label">1.0s</span>
         </div>
         <div class="slider-container">
@@ -280,7 +418,16 @@
         </div>
 
         <div class="param-row">
-            <span>Velocità di Skip</span>
+            <span style="display: flex; align-items: center;"
+                title="La velocità a cui andrà il video quando entra in modalità 'skip silenzi'">
+                Velocità di Skip
+                <svg class="info-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </span>
             <span class="val" id="skip-speed-label">8.00x</span>
         </div>
         <div class="slider-container">
@@ -289,12 +436,42 @@
     </div>
 
     <div class="section">
-        <div class="section-title section-title--no-border">
+        <div class="section-title section-title--no-border"
+            title="Inverte i colori, apri la tendina per decidere quali siti comprendere">
             Modalità Scura
-            <label class="switch">
-                <input type="checkbox" id="dark-mode-toggle">
-                <span class="slider-toggle"></span>
-            </label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <svg id="dark-mode-expand" class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <label class="switch">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+        </div>
+        <div id="dark-mode-options" class="dark-mode-options">
+            <div class="param-row">
+                <span>Webex</span>
+                <label class="switch">
+                    <input type="checkbox" id="dark-webex-toggle">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+            <div class="param-row">
+                <span>Sharepoint</span>
+                <label class="switch">
+                    <input type="checkbox" id="dark-sharepoint-toggle">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+            <div class="param-row">
+                <span>RecMan Polimi</span>
+                <label class="switch">
+                    <input type="checkbox" id="dark-recman-toggle">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -303,10 +480,14 @@
         🐛 Segnala un Problema/Bug
     </a>
 
+    <div class="footer-info">
+        Polimi Webex Assistant &bull; <a href="https://github.com/lorenzovitale1" target="_blank">Lorenzo Vitale</a>
+    </div>
+
     <script src="popup.js"></script>
-    <!-- Script inline: applica tema scuro al body PRIMA del rendering per evitare flash -->
+    <!-- Inline script: apply dark theme to body BEFORE rendering to prevent flash -->
     <script>
-        chrome.storage.local.get(['config'], function(result) {
+        chrome.storage.local.get(['config'], function (result) {
             if (result.config && result.config.darkMode) {
                 document.body.classList.add('dark');
             }
