@@ -475,13 +475,21 @@ document.addEventListener('click', function(e) {
     // Ignore main buttons (e.g. comboboxes that open the menu)
     if (el.hasAttribute('aria-expanded') || el.getAttribute('role') === 'combobox') return;
 
+    // Ignore non-speed control buttons (like forward/rewind 10 seconds)
+    const title = (el.getAttribute('title') || '').toLowerCase();
+    const originalText = (el.innerText || el.textContent || "").toLowerCase();
+    if (title.includes('forward') || title.includes('rewind') || 
+        originalText.includes('forward') || originalText.includes('rewind') || originalText.includes('second')) {
+        return;
+    }
+
     let newSpeed = null;
 
     if (el.hasAttribute('data-rate')) {
         newSpeed = parseFloat(el.getAttribute('data-rate'));
     } else {
         // Remove whitespace, line breaks or icons (e.g. checkmarks "✓ 1.5x") extracting only the number
-        let text = (el.innerText || el.textContent || "").toLowerCase().replace(/[^0-9\.x]/g, '');
+        let text = originalText.replace(/[^0-9\.x]/g, '');
         let match = text.match(/^([0-9]+(?:\.[0-9]+)?)x?$/);
         if (match) {
             newSpeed = parseFloat(match[1]);
