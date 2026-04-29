@@ -4,7 +4,6 @@
   "version": "1.2.5",
   "description": "Controlla la velocità di riproduzione dei video Webex e salta i silenzi automaticamente.",
   "permissions": [
-    "activeTab",
     "storage"
   ],
   "host_permissions": [
