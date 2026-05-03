@@ -8,7 +8,6 @@ let config = {
     silenceDuration: 1.0,
     skipSpeed: 8.0,
     darkModeWebex: true,
-    darkModeSharepoint: true,
     darkModeRecMan: true
 };
 
@@ -53,10 +52,6 @@ function injectDarkModeStyle() {
             filter: invert(1) hue-rotate(180deg) !important;
         }
 
-        /* Re-invert: iframe (e.g. stream player inside sharepoint) */
-        html.${DARK_MODE_CLASS} iframe {
-            filter: invert(1) hue-rotate(180deg) !important;
-        }
 
         /* FIX Polimi logo (PNG with transparent background):
            DO NOT re-invert: let the html invert transform it
@@ -91,7 +86,6 @@ function injectDarkModeStyle() {
         html.${DARK_MODE_CLASS} *:fullscreen .vjs-thumbnails-tooltip-img,
         html.${DARK_MODE_CLASS} *:fullscreen .wxp-progress-bar-tip-img,
         html.${DARK_MODE_CLASS} *:fullscreen img,
-        html.${DARK_MODE_CLASS} *:fullscreen iframe,
         
         html.${DARK_MODE_CLASS} *:-webkit-full-screen,
         html.${DARK_MODE_CLASS} *:-webkit-full-screen video,
@@ -101,8 +95,7 @@ function injectDarkModeStyle() {
         html.${DARK_MODE_CLASS} *:-webkit-full-screen .vjs-poster,
         html.${DARK_MODE_CLASS} *:-webkit-full-screen .vjs-thumbnails-tooltip-img,
         html.${DARK_MODE_CLASS} *:-webkit-full-screen .wxp-progress-bar-tip-img,
-        html.${DARK_MODE_CLASS} *:-webkit-full-screen img,
-        html.${DARK_MODE_CLASS} *:-webkit-full-screen iframe {
+        html.${DARK_MODE_CLASS} *:-webkit-full-screen img {
             filter: none !important;
         }
     `;
@@ -124,7 +117,7 @@ function applyDarkMode(enabled) {
     if (host.includes("webex.com")) {
         isDomainEnabled = config.darkModeWebex !== false;
     } else if (host.includes("sharepoint.com")) {
-        isDomainEnabled = config.darkModeSharepoint !== false;
+        isDomainEnabled = false;
     } else if (host.includes("ceda.polimi.it")) {
         isDomainEnabled = config.darkModeRecMan !== false;
     }

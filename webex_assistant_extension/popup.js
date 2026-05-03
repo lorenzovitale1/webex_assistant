@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const darkModeExpand = document.getElementById('dark-mode-expand');
     const darkModeOptions = document.getElementById('dark-mode-options');
     const darkWebexToggle = document.getElementById('dark-webex-toggle');
-    const darkSharepointToggle = document.getElementById('dark-sharepoint-toggle');
     const darkRecmanToggle = document.getElementById('dark-recman-toggle');
 
     let cachedDuration = 0;
@@ -49,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showRemainingTime: true,
         darkMode: false,
         darkModeWebex: true,
-        darkModeSharepoint: true,
         darkModeRecMan: true,
         threshold: 2.0,
         silenceDuration: 1.0,
@@ -93,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         darkModeToggle.checked = state.darkMode || false;
         darkWebexToggle.checked = state.darkModeWebex !== false;
-        darkSharepointToggle.checked = state.darkModeSharepoint !== false;
         darkRecmanToggle.checked = state.darkModeRecMan !== false;
 
         const thresh = state.threshold !== undefined ? state.threshold : 2.0;
@@ -139,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
         config.showRemainingTime = remainingTimeToggle.checked;
         config.darkMode = darkModeToggle.checked;
         config.darkModeWebex = darkWebexToggle.checked;
-        config.darkModeSharepoint = darkSharepointToggle.checked;
         config.darkModeRecMan = darkRecmanToggle.checked;
         // Do not overwrite email here unless explicitly requested
 
@@ -216,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     remainingTimeToggle.addEventListener('change', () => saveState({}));
     darkModeToggle.addEventListener('change', () => saveState({}));
     darkWebexToggle.addEventListener('change', () => saveState({}));
-    darkSharepointToggle.addEventListener('change', () => saveState({}));
     darkRecmanToggle.addEventListener('change', () => saveState({}));
 
     // Expand menu listener
