@@ -1,2 +1,4 @@
 ignored_files/
 .gitignore
+.idea/
+*.iml
