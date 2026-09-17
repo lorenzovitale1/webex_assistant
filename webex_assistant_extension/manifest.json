@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Polimi Webex Assistant",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Controlla la velocità di riproduzione dei video Webex e salta i silenzi automaticamente.",
   "permissions": [
     "storage"
